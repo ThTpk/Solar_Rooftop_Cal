@@ -61,6 +61,21 @@ th{color:var(--muted);font-weight:600}
 tr.pb td{background:var(--accent-soft)}
 .stack>*+*{margin-top:20px}
 .note{color:var(--muted);font-size:.82rem;margin-top:16px}
+.rules{margin-top:32px}
+.rules h2{font-size:1.3rem;margin:0 0 4px}
+.rules .sub{margin-bottom:16px}
+.rgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media (max-width:760px){.rgrid{grid-template-columns:1fr}}
+.rules h3{font-size:1.02rem;margin:0 0 10px;color:var(--accent)}
+.rules ul,.rules ol{margin:0;padding-left:20px}
+.rules li{margin:4px 0;font-size:.94rem}
+.rules li b{font-weight:600}
+.cmp th,.cmp td{text-align:left;white-space:normal}
+.cmp td:first-child{text-align:left;color:var(--muted)}
+.src{margin-top:16px;font-size:.85rem;color:var(--muted)}
+.src a{color:var(--accent)}
+.src ul{columns:2;column-gap:24px}
+@media (max-width:620px){.src ul{columns:1}}
 </style>
 </head>
 <body>
@@ -140,6 +155,95 @@ tr.pb td{background:var(--accent-soft)}
       <p class="note">ตัวเลขเป็นการประมาณการเพื่อประกอบการตัดสินใจ ค่าติดตั้งจริงขึ้นกับผู้รับเหมาและสภาพหลังคา การขายไฟต้องได้รับอนุมัติจาก กฟน./กฟภ. ภายในโควตารวม 500 MW (ยื่นก่อนได้ก่อน) และควรตรวจสอบช่วงเวลามาตรการลดหย่อนภาษีกับกรมสรรพากรก่อนติดตั้ง</p>
     </div>
   </div>
+
+  <section class="rules">
+    <h2>เงื่อนไขของรัฐบาล</h2>
+    <p class="sub">สรุปจากข่าวและประกาศที่เผยแพร่ ณ ตุลาคม 2569 ควรตรวจสอบประกาศฉบับทางการของ กกพ. การไฟฟ้า และกรมสรรพากรอีกครั้งก่อนตัดสินใจ</p>
+
+    <div class="rgrid">
+      <div class="card">
+        <h3>โครงการโซลาร์ภาคประชาชน 2569 (ขายไฟคืน)</h3>
+        <ul>
+          <li><b>ที่มา:</b> มติ กพช. วันที่ 29 เม.ย. 2569 ให้ กกพ. ออกระเบียบรับซื้อไฟฟ้า</li>
+          <li><b>ราคารับซื้อ:</b> 2.20 บาท/หน่วย คงที่ตลอดสัญญา</li>
+          <li><b>อายุสัญญา:</b> 10 ปี</li>
+          <li><b>ขนาดที่ขายได้:</b> ไม่เกิน 5 kW ต่อ 1 มิเตอร์</li>
+          <li><b>โควตารวม:</b> 500 MW ทั่วประเทศ พิจารณาตามลำดับการยื่น (ยื่นก่อนได้ก่อน)</li>
+          <li><b>ผู้มีสิทธิ:</b> ผู้ใช้ไฟประเภทบ้านอยู่อาศัย และเป็นเจ้าของมิเตอร์</li>
+          <li><b>เปิดรับคำขอ:</b> ตั้งแต่ 1 ก.ค. 2569 จนกว่าจะครบโควตา</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>วิธีคิดเงินแบบ Net Billing</h3>
+        <ul>
+          <li>ไฟที่ผลิตแล้ว<b>ใช้เองทันที</b> ช่วยลดหน่วยที่ต้องซื้อจากการไฟฟ้า จึงได้มูลค่าเท่าค่าไฟเต็ม (ประมาณ 4–5 บาท/หน่วย)</li>
+          <li>ไฟที่<b>เหลือส่งเข้าสาย</b> การไฟฟ้ารับซื้อที่ 2.20 บาท/หน่วย</li>
+          <li>ไฟที่ซื้อและไฟที่ขายคิดแยกกันทุกเดือน <b>ไม่ใช่ Net Metering</b> จึงเอาไฟที่ขายตอนกลางวันไปหักกับไฟที่ใช้ตอนกลางคืนแบบหน่วยต่อหน่วยไม่ได้</li>
+          <li>บ้านที่ใช้ไฟกลางวันมาก (แอร์ ทำงานที่บ้าน ชาร์จรถ EV กลางวัน) จะคุ้มกว่าบ้านที่ไม่มีคนอยู่กลางวัน</li>
+          <li>หลังหมดสัญญา 10 ปี ยังไม่มีประกาศราคารับซื้อ</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>มาตรการลดหย่อนภาษีโซลาร์รูฟท็อป</h3>
+        <ul>
+          <li><b>วงเงิน:</b> หักค่าอุปกรณ์และค่าติดตั้งตามที่จ่ายจริง ไม่เกิน 200,000 บาท</li>
+          <li><b>ผู้มีสิทธิ:</b> บุคคลธรรมดาที่ติดตั้งบนบ้านที่อยู่อาศัย</li>
+          <li><b>ระบบ:</b> On-grid เชื่อมกับ กฟน. หรือ กฟภ. ขนาดไม่เกิน 10 kWp ต่อมิเตอร์ (ติดตั้งแบตเตอรี่ร่วมได้)</li>
+          <li><b>จำนวนครั้ง:</b> 1 คน ใช้ได้ 1 ครั้ง 1 ระบบ ตลอดมาตรการ</li>
+          <li><b>หลักฐาน:</b> ใบกำกับภาษีอิเล็กทรอนิกส์เต็มรูป (e-Tax Invoice)</li>
+          <li><b>ภาษีที่ได้คืนจริง</b> = ยอดลดหย่อน × อัตราภาษีขั้นสูงสุดของผู้ยื่น</li>
+          <li><b>ช่วงเวลา:</b> แต่ละแหล่งระบุไม่ตรงกัน (ปี 2568–2570 หรือ 3 มี.ค. 2569 – 31 ธ.ค. 2571) ให้ตรวจกับกรมสรรพากร</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>ขั้นตอนโดยสรุป</h3>
+        <ol>
+          <li>ประเมินหลังคาและการใช้ไฟ เลือกขนาดระบบให้พอดีกับไฟที่ใช้กลางวัน</li>
+          <li>เลือกผู้รับเหมาที่ใช้อินเวอร์เตอร์ในรายชื่อที่การไฟฟ้ารับรอง และออก e-Tax Invoice ได้</li>
+          <li>ให้วิศวกรรับรองความแข็งแรงของโครงสร้างหลังคา และตรวจสอบกับ อปท. ในพื้นที่ว่าต้องแจ้งหรือขออนุญาตหรือไม่</li>
+          <li>ยื่นคำขอขนานไฟ/ขายไฟกับการไฟฟ้า
+            <ul>
+              <li>กทม. นนทบุรี สมุทรปราการ: กฟน. ผ่าน MyEnergy (MEA Solar OSS)</li>
+              <li>จังหวัดอื่น: กฟภ.</li>
+            </ul>
+          </li>
+          <li>การไฟฟ้าตรวจระบบ เปลี่ยนมิเตอร์ และทำสัญญาซื้อขายไฟ</li>
+          <li>เก็บ e-Tax Invoice ไว้ใช้ลดหย่อนตอนยื่นภาษีประจำปี</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>เปรียบเทียบ 2 มาตรการ</h3>
+      <div class="tablewrap">
+        <table class="cmp">
+          <thead><tr><th>หัวข้อ</th><th>ขายไฟคืน (โซลาร์ภาคประชาชน)</th><th>ลดหย่อนภาษี</th></tr></thead>
+          <tbody>
+            <tr><td>ขนาดระบบ</td><td>ไม่เกิน 5 kW ต่อมิเตอร์</td><td>ไม่เกิน 10 kWp ต่อมิเตอร์</td></tr>
+            <tr><td>ได้ประโยชน์</td><td>2.20 บาท/หน่วย สำหรับไฟส่วนเกิน 10 ปี</td><td>หักลดหย่อนได้สูงสุด 200,000 บาท (ครั้งเดียว)</td></tr>
+            <tr><td>ใครได้สิทธิ</td><td>ผู้ใช้ไฟบ้านอยู่อาศัยที่เป็นเจ้าของมิเตอร์</td><td>บุคคลธรรมดาที่ติดตั้งบนบ้านที่อยู่อาศัย</td></tr>
+            <tr><td>ข้อจำกัด</td><td>โควตา 500 MW ยื่นก่อนได้ก่อน</td><td>1 คน 1 ครั้ง ต้องมี e-Tax Invoice</td></tr>
+            <tr><td>ใช้พร้อมกันได้</td><td colspan="2">ได้ ถ้าระบบไม่เกิน 5 kW จะได้ทั้ง 2 สิทธิ ระบบ 5–10 kWp ได้เฉพาะลดหย่อนภาษี</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="src">
+      แหล่งข้อมูล
+      <ul>
+        <li><a href="https://www.thansettakij.com/economy/energy/660243" target="_blank" rel="noopener">ฐานเศรษฐกิจ – ขายไฟโซลาร์ให้รัฐ 2569</a></li>
+        <li><a href="https://justpow.co/article-thailand-solar-rooftop-policy/" target="_blank" rel="noopener">JustPow – นโยบายรับซื้อโซลาร์ 500 MW</a></li>
+        <li><a href="https://solarppm.com/residential-solar/" target="_blank" rel="noopener">SolarPPM – โครงการภาคประชาชน 2569</a></li>
+        <li><a href="https://www.kaohoon.com/news/842340" target="_blank" rel="noopener">ข่าวหุ้น – กกพ. เปิดรับ 1 ก.ค. 2569</a></li>
+        <li><a href="https://policywatch.thaipbs.or.th/article/economy-178" target="_blank" rel="noopener">Thai PBS Policy Watch – ลดหย่อนภาษี 200,000 บาท</a></li>
+        <li><a href="https://www.finnomena.com/?p=277083" target="_blank" rel="noopener">Finnomena – ติดโซลาร์ ลดหย่อนภาษี</a></li>
+      </ul>
+    </div>
+  </section>
 </div>
 
 <script>
