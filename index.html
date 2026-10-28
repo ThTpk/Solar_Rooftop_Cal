@@ -30,6 +30,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:"Sarabun",system
 h1{font-size:1.6rem;margin:0 0 4px}
 .sub{color:var(--muted);margin:0 0 20px}
 .grid{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start}
+.grid > *{min-width:0}
 @media (max-width:900px){.grid{grid-template-columns:1fr}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
 .card h2{font-size:1.05rem;margin:0 0 12px}
@@ -44,7 +45,13 @@ label.chk{display:flex;gap:8px;align-items:center;margin:8px 0;font-size:.95rem}
 .warn:empty{display:none}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
 @media (max-width:1100px) and (min-width:621px){.kpis{grid-template-columns:repeat(2,1fr)}}
-label.f.hide{display:none}
+.hide{display:none !important}
+#cmp tbody tr{cursor:pointer}
+#cmp tbody tr:hover td{background:var(--bg)}
+#cmp tr.cur td{background:var(--accent-soft);font-weight:600}
+#cmp td:nth-child(2){text-align:center}
+.best{color:var(--good);font-weight:700}
+.muted{color:var(--muted)}
 @media (max-width:620px){.kpis{grid-template-columns:repeat(2,1fr)}}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
 .kpi .l{color:var(--muted);font-size:.85rem}
@@ -97,27 +104,45 @@ tr.pb td{background:var(--accent-soft)}
       </fieldset>
 
       <fieldset>
+        <legend>กรณีที่ต้องการคำนวณ</legend>
+        <label class="f">เลือกกรณี<select id="scenario">
+          <option value="tier_sell" selected>ขายไฟ (ค่าไฟขั้นบันได)</option>
+          <option value="tier_nosell">ไม่ขายไฟ (ค่าไฟขั้นบันได)</option>
+          <option value="tou_sell">มิเตอร์ TOU + ขายไฟ</option>
+          <option value="avg_sell">ค่าไฟเฉลี่ยกรอกเอง + ขายไฟ</option>
+        </select></label>
+        <label class="chk"><input type="checkbox" id="bat"> ติดตั้งแบตเตอรี่ (LiFePO4)</label>
+        <div class="warn" id="scenarioInfo"></div>
+      </fieldset>
+
+      <fieldset>
         <legend>การใช้ไฟของบ้าน</legend>
         <label class="f">สัดส่วนใช้เองกลางวัน (%)<small>บ้านมีคนอยู่กลางวัน 60–80%, ไม่อยู่ 20–40%</small><input type="number" id="sc" value="70" min="0" max="100" step="5"></label>
-        <label class="f">วิธีคิดค่าไฟ<select id="tariff">
-          <option value="tier" selected>ขั้นบันได (บ้านอยู่อาศัย)</option>
-          <option value="tou">TOU (ประเภท 1.3)</option>
-          <option value="avg">ค่าเฉลี่ยคงที่ (กรอกเอง)</option>
-        </select></label>
-        <label class="f" data-mode="tier">ใช้ไฟต่อเดือน (หน่วย)<small>ก่อนติดโซลาร์ ดูจากบิล</small><input type="number" id="units" value="600" step="10" min="0"></label>
+        <label class="f">ใช้ไฟต่อเดือน (หน่วย)<small>ก่อนติดโซลาร์ ดูจากบิล</small><input type="number" id="units" value="600" step="10" min="0"></label>
         <label class="f" data-mode="tier tou">ค่า Ft (บาท/หน่วย)<small>ก.ย.–ธ.ค. 2569 = 0.1623</small><input type="number" id="ft" value="0.1623" step="0.01"></label>
         <label class="f" data-mode="avg">ค่าไฟเฉลี่ย (บาท/หน่วย)<small>รวม Ft + VAT ดูจากบิล</small><input type="number" id="rate" value="4.5" step="0.05" min="0"></label>
         <label class="f">ค่าไฟขึ้นเฉลี่ย (%/ปี)<input type="number" id="esc" value="1" step="0.5"></label>
         <div class="warn" id="tariffInfo"></div>
       </fieldset>
 
-      <fieldset>
+      <fieldset id="sellBox">
         <legend>ขายไฟคืนการไฟฟ้า</legend>
-        <label class="chk"><input type="checkbox" id="sell" checked> เข้าร่วมโครงการโซลาร์ภาคประชาชน</label>
         <label class="f">ราคารับซื้อ (บาท/หน่วย)<input type="number" id="buy" value="2.20" step="0.01" min="0"></label>
         <label class="f">อายุสัญญา (ปี)<input type="number" id="contract" value="10" min="0" step="1"></label>
         <label class="f">ราคาหลังหมดสัญญา (บาท/หน่วย)<small>ยังไม่มีประกาศ ตั้ง 0 = ไม่ได้เงิน</small><input type="number" id="post" value="0" step="0.1" min="0"></label>
         <div class="warn" id="sellWarn"></div>
+      </fieldset>
+
+      <fieldset id="batBox">
+        <legend>แบตเตอรี่</legend>
+        <label class="f">ความจุ (kWh)<input type="number" id="batCap" value="5" step="0.5" min="0"></label>
+        <label class="f">ราคาแบต (บาท)<small>LFP ทั่วไป 5,000–9,000 บาท/kWh</small><input type="number" id="batCost" value="40000" step="1000" min="0"></label>
+        <label class="f">ส่วนต่างอินเวอร์เตอร์ Hybrid (บาท)<small>เทียบกับ On-grid ธรรมดา</small><input type="number" id="batHybrid" value="20000" step="1000" min="0"></label>
+        <label class="f">ใช้ได้จริง (% ของความจุ)<input type="number" id="batDod" value="90" min="0" max="100" step="5"></label>
+        <label class="f">ประสิทธิภาพชาร์จ-จ่าย (%)<input type="number" id="batEff" value="90" min="0" max="100" step="1"></label>
+        <label class="f">อายุแบต (ปี)<input type="number" id="batLife" value="10" min="1" step="1"></label>
+        <label class="f">ค่าเปลี่ยนแบตเมื่อครบอายุ (บาท)<small>คาดว่าราคาแบตจะถูกลง</small><input type="number" id="batRep" value="30000" step="1000" min="0"></label>
+        <div class="warn" id="batInfo"></div>
       </fieldset>
 
       <fieldset>
@@ -169,6 +194,13 @@ tr.pb td{background:var(--accent-soft)}
         <div class="kpi"><div class="l">ผลตอบแทน (IRR)</div><div class="v" id="kIrr">–</div><div class="n">ต่อปี เทียบเงินที่จ่ายเอง</div></div>
         <div class="kpi"><div class="l">มูลค่าปัจจุบันสุทธิ (NPV)</div><div class="v" id="kNpv">–</div><div class="n" id="kNpvN">–</div></div>
         <div class="kpi"><div class="l">มูลค่าไฟที่ใช้เอง</div><div class="v" id="kUnit">–</div><div class="n" id="kUnitN">ต่อหน่วย ปีแรก</div></div>
+      </div>
+
+      <div class="card">
+        <h2>เปรียบเทียบกรณี</h2>
+        <p class="sub" style="margin:-6px 0 10px;font-size:.88rem">ใช้ค่าที่กรอกไว้ทั้งหมด เปลี่ยนเฉพาะกรณีและแบตเตอรี่ · คลิกแถวเพื่อเลือกกรณีนั้น</p>
+        <div class="tablewrap"><table id="cmp"></table></div>
+        <p class="note" style="margin-top:8px">* ได้ปีแรก = ค่าไฟที่ประหยัด + ขายไฟ − ค่าดูแล (ก่อนหักค่างวด) · ★ = NPV สูงสุด</p>
       </div>
 
       <div class="card">
@@ -309,23 +341,25 @@ tr.pb td{background:var(--accent-soft)}
 const $ = id => document.getElementById(id);
 const num = id => parseFloat($(id).value) || 0;
 const baht = v => Math.round(v).toLocaleString('th-TH');
-
-function irr(flows){
-  const npv = r => flows.reduce((s, c, t) => s + c / Math.pow(1 + r, t), 0);
-  let lo = -0.99, hi = 10;
-  if (npv(lo) * npv(hi) > 0) return null;
-  for (let i = 0; i < 200; i++){
-    const mid = (lo + hi) / 2;
-    if (npv(lo) * npv(mid) <= 0) hi = mid; else lo = mid;
-  }
-  return (lo + hi) / 2;
-}
+const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
 
 // อัตราค่าพลังงานไฟบ้าน [จำนวนหน่วยในขั้น, บาท/หน่วย] ประเภท 1.1 (≤ 150 หน่วย/เดือน) และ 1.2 (> 150)
 const TIER_11 = [[15, 2.3488], [10, 2.9882], [10, 3.2405], [65, 3.6237], [50, 3.7171], [250, 4.2218], [Infinity, 4.4217]];
 const TIER_12 = [[150, 3.2484], [250, 4.2218], [Infinity, 4.4217]];
 const TOU_ON = 5.7982, TOU_OFF = 2.6369;
 const VAT = 1.07;
+
+const SCENARIOS = {
+  tier_sell:   {label: 'ขายไฟ (ขั้นบันได)', tariff: 'tier', sell: true},
+  tier_nosell: {label: 'ไม่ขายไฟ (ขั้นบันได)', tariff: 'tier', sell: false},
+  tou_sell:    {label: 'มิเตอร์ TOU + ขายไฟ', tariff: 'tou', sell: true},
+  avg_sell:    {label: 'ค่าไฟเฉลี่ย + ขายไฟ', tariff: 'avg', sell: true},
+};
+const COMPARE = ['tier_sell', 'tier_nosell', 'tou_sell'];
+
+const INPUTS = ['size', 'cost', 'fee', 'yield', 'deg', 'sc', 'units', 'ft', 'rate', 'esc', 'buy', 'contract', 'post',
+  'subsidy', 'taxRate', 'loanAmt', 'loanRate', 'loanYears', 'loanIns', 'om', 'inv', 'invYear', 'roof', 'roofYear',
+  'years', 'disc', 'batCap', 'batCost', 'batHybrid', 'batDod', 'batEff', 'batLife', 'batRep'];
 
 // ค่าไฟรายเดือน (ค่าพลังงาน + Ft + VAT ไม่รวมค่าบริการ ซึ่งไม่เปลี่ยนตามโซลาร์)
 function energyBill(u, tiers, ft){
@@ -338,75 +372,106 @@ function energyBill(u, tiers, ft){
   return (e + u * ft) * VAT;
 }
 
-function calc(){
-  const size = num('size'), years = Math.round(num('years'));
-  const sc = Math.min(Math.max(num('sc'), 0), 100) / 100;
-  const gross = num('cost') + num('fee');
+function irr(flows){
+  const npv = r => flows.reduce((s, c, t) => s + c / Math.pow(1 + r, t), 0);
+  let lo = -0.99, hi = 10;
+  if (npv(lo) * npv(hi) > 0) return null;
+  for (let i = 0; i < 200; i++){
+    const mid = (lo + hi) / 2;
+    if (npv(lo) * npv(mid) <= 0) hi = mid; else lo = mid;
+  }
+  return (lo + hi) / 2;
+}
 
-  const mode = $('tariff').value, ft = num('ft'), units = num('units');
-  document.querySelectorAll('[data-mode]').forEach(el => el.classList.toggle('hide', !el.dataset.mode.split(' ').includes(mode)));
-  const tiers = units > 150 ? TIER_12 : TIER_11;
-  const touRate = ((5 * TOU_ON + 2 * TOU_OFF) / 7 + ft) * VAT;
-  // มูลค่าค่าไฟที่ประหยัดได้จากไฟที่ใช้เอง: แบบขั้นบันไดจะไปลดหน่วยแพงสุดก่อน
-  const selfValue = (self, t) => {
-    const esc = Math.pow(1 + num('esc') / 100, t - 1);
-    if (mode === 'avg') return self * num('rate') * esc;
-    if (mode === 'tou') return self * touRate * esc;
-    const m = Math.min(self / 12, units);
-    return 12 * (energyBill(units, tiers, ft) - energyBill(units - m, tiers, ft)) * esc;
-  };
-  const self1 = size * num('yield') * 365 * sc;
-  $('tariffInfo').textContent =
-    mode === 'tier'
-      ? `ประเภท ${units > 150 ? '1.2' : '1.1'}: ค่าไฟก่อนติดโซลาร์ประมาณ ${baht(energyBill(units, tiers, ft))} บาท/เดือน (ไม่รวมค่าบริการ)` +
-        (self1 / 12 > units ? ' · ไฟที่ใช้เองมากกว่าไฟที่ใช้ทั้งเดือน ส่วนเกินไม่นับเป็นเงินประหยัด' : '')
-    : mode === 'tou'
-      ? `On-Peak ${TOU_ON} บาท (จ.–ศ. 09:00–22:00) Off-Peak ${TOU_OFF} บาท · คิดว่าไฟโซลาร์ 5 ใน 7 วันอยู่ช่วง On-Peak = ${touRate.toFixed(2)} บาท/หน่วย รวม Ft + VAT (ยังไม่รวมผลที่บิลส่วนอื่นเปลี่ยนเมื่อย้ายเป็นมิเตอร์ TOU)`
-    : '';
+function readInputs(){
+  const p = Object.fromEntries(INPUTS.map(id => [id, num(id)]));
+  p.scenario = $('scenario').value;
+  p.bat = $('bat').checked;
+  p.aid = document.querySelector('input[name=aid]:checked').value;
+  p.loan = $('loan').checked;
+  return p;
+}
 
-  const sellEligible = size <= 5;
-  const selling = $('sell').checked && sellEligible;
-  $('sellWarn').textContent = $('sell').checked && !sellEligible
-    ? 'ระบบใหญ่กว่า 5 kW ขายไฟในโครงการไม่ได้ จึงคิดไฟส่วนเกินเป็น 0 (ต้องตั้งค่าไม่ให้ไหลย้อน)'
-    : !$('sell').checked ? 'ไม่ได้ขายไฟ: ไฟส่วนเกินคิดเป็น 0 บาท' : '';
+function simulate(p){
+  const scn = SCENARIOS[p.scenario];
+  const years = Math.round(p.years);
+  const sc = clamp(p.sc, 0, 100) / 100;
+  const batInvest = p.bat ? p.batCost + p.batHybrid : 0;
+  const gross = p.cost + p.fee + batInvest;
+  const warn = {};
 
-  const aid = document.querySelector('input[name=aid]:checked').value;
-  const taxEligible = size <= 10;
-  const deductible = Math.min(num('cost'), 200000);
-  const taxSave = aid === 'tax' && taxEligible ? deductible * num('taxRate') / 100 : 0;
-  const subEligible = size >= 5 && size <= 10;
-  const subsidy = aid === 'subsidy' && subEligible ? Math.min(num('subsidy'), gross) : 0;
-  $('taxWarn').textContent =
-    aid === 'tax' && !taxEligible ? 'ระบบเกิน 10 kWp ไม่เข้าเงื่อนไขลดหย่อนภาษี'
-    : aid === 'subsidy' && !subEligible ? 'เงินอุดหนุนสำหรับระบบ 5–10 kW เท่านั้น จึงคิดเป็น 0'
-    : aid === 'subsidy' ? 'ผู้รับเงินอุดหนุนต้องไม่เคยใช้สิทธิลดหย่อนภาษีโซลาร์ (ใช้ร่วมกันไม่ได้)' : '';
+  const sellEligible = p.size <= 5;
+  const selling = scn.sell && sellEligible;
+  warn.sell = scn.sell && !sellEligible
+    ? 'ระบบใหญ่กว่า 5 kW ขายไฟในโครงการไม่ได้ จึงคิดไฟส่วนเกินเป็น 0 (ต้องตั้งค่าไม่ให้ไหลย้อน)' : '';
 
-  const useLoan = $('loan').checked;
+  const taxEligible = p.size <= 10;
+  const deductible = Math.min(p.cost + batInvest, 200000);
+  const taxSave = p.aid === 'tax' && taxEligible ? deductible * p.taxRate / 100 : 0;
+  const subEligible = p.size >= 5 && p.size <= 10;
+  const subsidy = p.aid === 'subsidy' && subEligible ? Math.min(p.subsidy, gross) : 0;
+  warn.tax =
+    p.aid === 'tax' && !taxEligible ? 'ระบบเกิน 10 kWp ไม่เข้าเงื่อนไขลดหย่อนภาษี'
+    : p.aid === 'subsidy' && !subEligible ? 'เงินอุดหนุนสำหรับระบบ 5–10 kW เท่านั้น จึงคิดเป็น 0'
+    : p.aid === 'subsidy' ? 'ผู้รับเงินอุดหนุนต้องไม่เคยใช้สิทธิลดหย่อนภาษีโซลาร์ (ใช้ร่วมกันไม่ได้)' : '';
+
   const loanMax = Math.max(gross - subsidy, 0);
-  const principal = useLoan ? Math.min(num('loanAmt'), loanMax) : 0;
-  $('loanWarn').textContent = useLoan && num('loanAmt') > loanMax
+  const principal = p.loan ? Math.min(p.loanAmt, loanMax) : 0;
+  warn.loan = p.loan && p.loanAmt > loanMax
     ? `กู้ได้ไม่เกินค่าติดตั้งที่เหลือหลังหักเงินอุดหนุน (${baht(loanMax)} บาท)` : '';
-  const loanYears = Math.max(Math.round(num('loanYears')), 1);
-  const nPay = loanYears * 12, mRate = num('loanRate') / 100 / 12;
+  const loanYears = Math.max(Math.round(p.loanYears), 1);
+  const nPay = loanYears * 12, mRate = p.loanRate / 100 / 12;
   const monthly = principal ? (mRate ? principal * mRate / (1 - Math.pow(1 + mRate, -nPay)) : principal / nPay) : 0;
   const totalInterest = monthly * nPay - principal;
   // ประกันสินเชื่อ + อากรแสตมป์สัญญากู้ 0.05%
-  const loanFees = principal ? num('loanIns') + principal * 0.0005 : 0;
+  const loanFees = principal ? p.loanIns + principal * 0.0005 : 0;
 
   // เงินที่จ่ายเองวันติดตั้ง = ค่าติดตั้ง − เงินอุดหนุน − ภาษีที่ได้คืน − เงินกู้ + ค่าธรรมเนียมเงินกู้
   const net0 = gross - subsidy - taxSave - principal + loanFees;
+
+  const tiers = p.units > 150 ? TIER_12 : TIER_11;
+  // TOU: ไฟโซลาร์กลางวันและไฟแบตช่วงหัวค่ำ (18–22 น.) วันธรรมดาอยู่ช่วง On-Peak 5 ใน 7 วัน
+  const touRate = ((5 * TOU_ON + 2 * TOU_OFF) / 7 + p.ft) * VAT;
+  // มูลค่าค่าไฟที่ประหยัดได้จากไฟที่ใช้เอง: แบบขั้นบันไดจะไปลดหน่วยแพงสุดก่อน
+  const valueOf = (kwh, t) => {
+    const esc = Math.pow(1 + p.esc / 100, t - 1);
+    if (scn.tariff === 'avg') return kwh * p.rate * esc;
+    if (scn.tariff === 'tou') return kwh * touRate * esc;
+    const m = Math.min(kwh / 12, p.units);
+    return 12 * (energyBill(p.units, tiers, p.ft) - energyBill(p.units - m, tiers, p.ft)) * esc;
+  };
+
+  const dailyUse = p.units * 12 / 365;
+  const usable = p.batCap * clamp(p.batDod, 0, 100) / 100, eff = clamp(p.batEff, 1, 100) / 100;
+  const batLife = Math.max(Math.round(p.batLife), 1);
   const rows = [];
-  let cum = -net0, payback = net0 > 0 ? null : 0;
+  let cum = -net0, payback = net0 > 0 ? null : 0, batLimit = '';
   const flows = [-net0];
 
   for (let t = 1; t <= years; t++){
-    const prod = size * num('yield') * 365 * Math.pow(1 - num('deg') / 100, t - 1);
-    const self = prod * sc, exp = prod - self;
-    const expRate = selling ? (t <= num('contract') ? num('buy') : num('post')) : 0;
-    const save = selfValue(self, t), sell = exp * expRate;
-    const cost = num('om')
-      + (t === Math.round(num('invYear')) ? num('inv') : 0)
-      + (t === Math.round(num('roofYear')) ? num('roof') : 0);
+    const prod = p.size * p.yield * 365 * Math.pow(1 - p.deg / 100, t - 1);
+    const self = prod * sc;
+    let batOut = 0, stored = 0;
+    if (p.bat){
+      // แบตจ่ายได้ไม่เกิน: ความจุที่ใช้ได้, ไฟเหลือกลางวัน, ไฟที่บ้านใช้นอกเวลาแดด
+      const lim = {
+        'ความจุแบต': usable * eff,
+        'ไฟเหลือกลางวัน': (prod - self) / 365 * eff,
+        'ไฟที่ใช้กลางคืน': Math.max(dailyUse - self / 365, 0),
+      };
+      const [name, daily] = Object.entries(lim).reduce((a, b) => b[1] < a[1] ? b : a);
+      if (t === 1) batLimit = name;
+      batOut = daily * 365;
+      stored = batOut / eff;
+    }
+    const exp = prod - self - stored;
+    const expRate = selling ? (t <= p.contract ? p.buy : p.post) : 0;
+    const save = valueOf(self + batOut, t), sell = exp * expRate;
+    const batRepl = p.bat && t % batLife === 0 && t < years ? p.batRep : 0;
+    const cost = p.om
+      + (t === Math.round(p.invYear) ? p.inv : 0)
+      + (t === Math.round(p.roofYear) ? p.roof : 0)
+      + batRepl;
     const loanPay = t <= loanYears ? monthly * 12 : 0;
     const cash = save + sell - cost - loanPay;
     const prev = cum;
@@ -414,7 +479,7 @@ function calc(){
     // นับจุดคืนทุนครั้งสุดท้ายที่เงินสะสมกลับมาเป็นบวก (ช่วงผ่อนอาจติดลบก่อน)
     if (cum < 0) payback = null;
     else if (prev < 0) payback = t - 1 + (-prev / cash);
-    rows.push({t, prod, self, exp, save, sell, cost, loanPay, cash, cum});
+    rows.push({t, prod, self, batOut, exp, save, sell, cost, loanPay, cash, cum});
     flows.push(cash);
   }
 
@@ -426,22 +491,57 @@ function calc(){
     if (fullPayback === null && prev < 0 && fullCum >= 0) fullPayback = r.t - 1 + (-prev / gain);
   }
 
-  const avgBill = mode === 'tier' && units ? energyBill(units, tiers, ft) / units : null;
-  render({gross, subsidy, taxSave, principal, monthly, totalInterest, loanFees, loanYears, net0, rows, payback, fullPayback, years, flows, avgBill});
+  const d = p.disc / 100;
+  const npv = flows.reduce((s, c, t) => s + c / Math.pow(1 + d, t), 0);
+  const shownPayback = principal ? fullPayback : payback;
+  const avgBill = scn.tariff === 'tier' && p.units ? energyBill(p.units, tiers, p.ft) / p.units : null;
+
+  return {scn, selling, gross, batInvest, subsidy, taxSave, principal, monthly, totalInterest, loanFees, loanYears,
+    net0, rows, payback, fullPayback, shownPayback, years, flows, npv, avgBill, tiers, touRate, batLimit, warn};
 }
 
-function render({gross, subsidy, taxSave, principal, monthly, totalInterest, loanFees, loanYears, net0, rows, payback, fullPayback, years, flows, avgBill}){
+function calc(){
+  const p = readInputs();
+  const res = simulate(p);
+  const {scn} = res;
+
+  document.querySelectorAll('[data-mode]').forEach(el => el.classList.toggle('hide', !el.dataset.mode.split(' ').includes(scn.tariff)));
+  $('sellBox').classList.toggle('hide', !scn.sell);
+  $('batBox').classList.toggle('hide', !p.bat);
+
+  $('scenarioInfo').textContent =
+    p.scenario === 'tier_nosell' ? 'ไม่ขายไฟ: ต้องตั้งอินเวอร์เตอร์ไม่ให้ไฟไหลย้อน (Zero Export) ไฟที่ใช้ไม่หมดจะสูญเปล่า ยกเว้นเก็บในแบตเตอรี่ ระบบใหญ่กว่า 5 kW ต้องใช้กรณีนี้'
+    : p.scenario === 'tou_sell' ? 'ต้องขอเปลี่ยนเป็นมิเตอร์ TOU (ใส่ค่ามิเตอร์ในช่องค่าธรรมเนียม) ค่าไฟกลางวันวันธรรมดาแพง แต่กลางคืนและวันหยุดถูก'
+    : '';
+  const self1 = res.rows[0].self;
+  $('tariffInfo').textContent =
+    scn.tariff === 'tier'
+      ? `ประเภท ${p.units > 150 ? '1.2' : '1.1'}: ค่าไฟก่อนติดโซลาร์ประมาณ ${baht(energyBill(p.units, res.tiers, p.ft))} บาท/เดือน (ไม่รวมค่าบริการ)` +
+        (self1 / 12 > p.units ? ' · ไฟที่ใช้เองมากกว่าไฟที่ใช้ทั้งเดือน ส่วนเกินไม่นับเป็นเงินประหยัด' : '')
+    : scn.tariff === 'tou'
+      ? `On-Peak ${TOU_ON} บาท (จ.–ศ. 09:00–22:00) Off-Peak ${TOU_OFF} บาท · คิดว่าไฟโซลาร์ 5 ใน 7 วันอยู่ช่วง On-Peak = ${res.touRate.toFixed(2)} บาท/หน่วย รวม Ft + VAT (ยังไม่รวมผลที่บิลส่วนอื่นเปลี่ยนเมื่อย้ายเป็นมิเตอร์ TOU)`
+    : '';
+  $('sellWarn').textContent = res.warn.sell;
+  $('taxWarn').textContent = res.warn.tax;
+  $('loanWarn').textContent = res.warn.loan;
+  const y1 = res.rows[0];
+  $('batInfo').textContent = p.bat
+    ? `แบตจ่ายไฟได้ ${(y1.batOut / 365).toFixed(1)} หน่วย/วัน ถูกจำกัดโดย${res.batLimit}` +
+      (res.batLimit === 'ไฟเหลือกลางวัน' ? ' (แบตใหญ่เกินไฟที่เหลือ ลองลดความจุ)' : '') +
+      (scn.tariff === 'tou' ? ' · TOU: สมมติว่าใช้ไฟจากแบตช่วง 18–22 น. ซึ่งเป็น On-Peak ในวันธรรมดา' : '')
+    : '';
+
+  render(res, p);
+  renderCompare(p);
+}
+
+function render(res, p){
+  const {gross, batInvest, subsidy, taxSave, principal, monthly, totalInterest, loanFees, loanYears, net0, rows,
+    payback, shownPayback, years, flows, npv, avgBill, selling} = res;
   const y1 = rows[0];
-  const d = num('disc') / 100;
-  const npv = flows.reduce((s, c, t) => s + c / Math.pow(1 + d, t), 0);
-  $('kNpv').textContent = baht(npv) + ' ฿';
-  $('kNpv').className = 'v ' + (npv >= 0 ? 'good' : 'bad');
-  $('kNpvN').textContent = `${npv >= 0 ? 'คุ้มกว่า' : 'ด้อยกว่า'}เอาเงินไปลงทุนที่ ${num('disc')}% ต่อปี`;
-  $('kUnit').textContent = y1.self ? (y1.save / y1.self).toFixed(2) + ' ฿' : '–';
-  $('kUnitN').textContent = avgBill ? `ต่อหน่วย ปีแรก (ค่าไฟเฉลี่ยในบิล ${avgBill.toFixed(2)} บาท)` : 'ต่อหน่วย ปีแรก';
-  const shown = principal ? fullPayback : payback;
-  $('kPayback').textContent = shown === null ? `เกิน ${years} ปี` : `${shown.toFixed(1)} ปี`;
-  $('kPayback').className = 'v ' + (shown === null ? 'bad' : shown <= 7 ? 'good' : '');
+
+  $('kPayback').textContent = shownPayback === null ? `เกิน ${years} ปี` : `${shownPayback.toFixed(1)} ปี`;
+  $('kPayback').className = 'v ' + (shownPayback === null ? 'bad' : shownPayback <= 7 ? 'good' : '');
   $('kPaybackN').textContent = principal
     ? `เทียบต้นทุนรวมดอกเบี้ย · เงินที่จ่ายเองคืนใน ${payback === null ? `เกิน ${years}` : payback.toFixed(1)} ปี`
     : 'นับจากวันติดตั้ง';
@@ -456,11 +556,24 @@ function render({gross, subsidy, taxSave, principal, monthly, totalInterest, loa
   $('kInstall').textContent = principal ? baht(monthly) + ' ฿' : 'ไม่กู้';
   $('kInstallN').textContent = principal ? `ต่อเดือน นาน ${loanYears} ปี (กู้ ${baht(principal)} บาท)` : 'ไม่มีค่างวด';
   $('kInterest').textContent = baht(totalInterest) + ' ฿';
+  $('kNpv').textContent = baht(npv) + ' ฿';
+  $('kNpv').className = 'v ' + (npv >= 0 ? 'good' : 'bad');
+  $('kNpvN').textContent = `${npv >= 0 ? 'คุ้มกว่า' : 'ด้อยกว่า'}เอาเงินไปลงทุนที่ ${p.disc}% ต่อปี`;
+  const used = y1.self + y1.batOut;
+  $('kUnit').textContent = used ? (y1.save / used).toFixed(2) + ' ฿' : '–';
+  $('kUnitN').textContent = avgBill ? `ต่อหน่วย ปีแรก (ค่าไฟเฉลี่ยในบิล ${avgBill.toFixed(2)} บาท)` : 'ต่อหน่วย ปีแรก';
 
+  const batRows = p.bat ? `
+    <span>รวมแบตเตอรี่ + อินเวอร์เตอร์ Hybrid</span><span>${baht(batInvest)} บาท</span>` : '';
   const loanRows = principal ? `
     <span>ผ่อนธนาคาร ${baht(monthly)} × 12 เดือน</span><span class="bad">−${baht(y1.loanPay)} บาท</span>` : '';
+  const batUse = p.bat ? `
+    <span>ใช้ไฟจากแบตตอนกลางคืน ${baht(y1.batOut)} หน่วย</span><span class="muted">รวมในค่าไฟที่ประหยัด</span>` : '';
+  const expRow = selling
+    ? `<span>ส่งออก ${baht(y1.exp)} หน่วย → ขายไฟ</span><span class="good">${baht(y1.sell)} บาท</span>`
+    : `<span>ไฟเหลือใช้ไม่หมด ${baht(y1.exp)} หน่วย (ไม่ได้ขาย)</span><span>0 บาท</span>`;
   $('breakdown').innerHTML = `
-    <span>ค่าติดตั้ง + ค่าธรรมเนียม</span><span>${baht(gross)} บาท</span>
+    <span>ค่าติดตั้ง + ค่าธรรมเนียม</span><span>${baht(gross)} บาท</span>${batRows}
     <span>เงินอุดหนุนจากรัฐ</span><span class="good">−${baht(subsidy)} บาท</span>
     <span>คืนภาษีจากการลดหย่อน</span><span class="good">−${baht(taxSave)} บาท</span>
     <span>เงินกู้ธนาคาร</span><span>−${baht(principal)} บาท</span>
@@ -468,17 +581,36 @@ function render({gross, subsidy, taxSave, principal, monthly, totalInterest, loa
     <span class="t">เงินที่จ่ายเองวันติดตั้ง</span><span class="t">${baht(net0)} บาท</span>
     <span>ดอกเบี้ยรวมตลอดสัญญากู้</span><span class="bad">${baht(totalInterest)} บาท</span>
     <span class="t">ต้นทุนรวมทั้งหมด (จ่ายเอง + เงินต้น + ดอกเบี้ย)</span><span class="t">${baht(net0 + principal + totalInterest)} บาท</span>
-    <span>ผลิตไฟปีแรก</span><span>${baht(y1.prod)} หน่วย</span>
-    <span>ใช้เอง ${baht(y1.self)} หน่วย → ประหยัดค่าไฟ</span><span class="good">${baht(y1.save)} บาท</span>
-    <span>ส่งออก ${baht(y1.exp)} หน่วย → ขายไฟ</span><span class="good">${baht(y1.sell)} บาท</span>
+    <span>ผลิตไฟปีแรก</span><span>${baht(y1.prod)} หน่วย</span>${batUse}
+    <span>ใช้เอง ${baht(used)} หน่วย → ประหยัดค่าไฟ</span><span class="good">${baht(y1.save)} บาท</span>
+    ${expRow}
     <span>ค่าดูแลรักษา</span><span class="bad">−${baht(y1.cost)} บาท</span>${loanRows}
     <span class="t">เงินเหลือสุทธิปีแรก</span><span class="t ${y1.cash >= 0 ? 'good' : 'bad'}">${baht(y1.cash)} บาท</span>`;
 
   const pbYear = payback === null ? -1 : Math.ceil(payback);
-  $('tbl').innerHTML = `<thead><tr><th>ปี</th><th>ผลิต (หน่วย)</th><th>ประหยัดค่าไฟ</th><th>ขายไฟ</th><th>ค่าดูแล</th><th>ผ่อนธนาคาร</th><th>สุทธิ</th><th>สะสม</th></tr></thead><tbody>` +
-    rows.map(r => `<tr class="${r.t === pbYear ? 'pb' : ''}"><td>${r.t}</td><td>${baht(r.prod)}</td><td>${baht(r.save)}</td><td>${baht(r.sell)}</td><td>${r.cost ? '−' + baht(r.cost) : '0'}</td><td>${r.loanPay ? '−' + baht(r.loanPay) : '0'}</td><td>${baht(r.cash)}</td><td class="${r.cum >= 0 ? 'good' : 'bad'}">${baht(r.cum)}</td></tr>`).join('') + '</tbody>';
+  $('tbl').innerHTML = `<thead><tr><th>ปี</th><th>ผลิต (หน่วย)</th><th>ใช้จากแบต</th><th>ประหยัดค่าไฟ</th><th>ขายไฟ</th><th>ค่าดูแล</th><th>ผ่อนธนาคาร</th><th>สุทธิ</th><th>สะสม</th></tr></thead><tbody>` +
+    rows.map(r => `<tr class="${r.t === pbYear ? 'pb' : ''}"><td>${r.t}</td><td>${baht(r.prod)}</td><td>${baht(r.batOut)}</td><td>${baht(r.save)}</td><td>${baht(r.sell)}</td><td>${r.cost ? '−' + baht(r.cost) : '0'}</td><td>${r.loanPay ? '−' + baht(r.loanPay) : '0'}</td><td>${baht(r.cash)}</td><td class="${r.cum >= 0 ? 'good' : 'bad'}">${baht(r.cum)}</td></tr>`).join('') + '</tbody>';
 
   drawChart([-net0, ...rows.map(r => r.cum)]);
+}
+
+function renderCompare(p){
+  const cases = [];
+  for (const key of COMPARE) for (const bat of [false, true]){
+    const r = simulate({...p, scenario: key, bat});
+    cases.push({key, bat, r});
+  }
+  const bestNpv = Math.max(...cases.map(c => c.r.npv));
+  const fmtPb = v => v === null ? `> ${p.years} ปี` : v.toFixed(1) + ' ปี';
+  $('cmp').innerHTML = `<thead><tr><th>กรณี</th><th>แบต</th><th>ลงทุนรวม</th><th>ได้ปีแรก*</th><th>คืนทุน</th><th>กำไร ${Math.round(p.years)} ปี</th><th>NPV</th></tr></thead><tbody>` +
+    cases.map(({key, bat, r}) => {
+      const y1 = r.rows[0], gain = y1.save + y1.sell - y1.cost;
+      const cur = key === p.scenario && bat === p.bat;
+      return `<tr class="${cur ? 'cur' : ''}" data-key="${key}" data-bat="${bat}">
+        <td>${SCENARIOS[key].label}</td><td>${bat ? '✓' : '–'}</td><td>${baht(r.gross)}</td><td>${baht(gain)}</td>
+        <td>${fmtPb(r.shownPayback)}</td><td class="${r.rows[r.rows.length - 1].cum >= 0 ? '' : 'bad'}">${baht(r.rows[r.rows.length - 1].cum)}</td>
+        <td class="${r.npv === bestNpv ? 'best' : r.npv < 0 ? 'bad' : ''}">${baht(r.npv)}${r.npv === bestNpv ? ' ★' : ''}</td></tr>`;
+    }).join('') + '</tbody>';
 }
 
 function drawChart(vals){
@@ -503,6 +635,13 @@ function drawChart(vals){
   $('chart').innerHTML = s;
 }
 
+$('cmp').addEventListener('click', e => {
+  const tr = e.target.closest('tr[data-key]');
+  if (!tr) return;
+  $('scenario').value = tr.dataset.key;
+  $('bat').checked = tr.dataset.bat === 'true';
+  calc();
+});
 $('f').addEventListener('input', calc);
 calc();
 </script>
