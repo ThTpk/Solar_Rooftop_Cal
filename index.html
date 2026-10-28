@@ -42,7 +42,7 @@ input[type=number],select{width:100%;padding:6px 8px;border:1px solid var(--line
 label.chk{display:flex;gap:8px;align-items:center;margin:8px 0;font-size:.95rem}
 .warn{background:var(--accent-soft);border-radius:8px;padding:8px 10px;font-size:.88rem;margin:6px 0}
 .warn:empty{display:none}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
 @media (max-width:620px){.kpis{grid-template-columns:repeat(2,1fr)}}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
 .kpi .l{color:var(--muted);font-size:.85rem}
@@ -81,7 +81,7 @@ tr.pb td{background:var(--accent-soft)}
 <body>
 <div class="wrap">
   <h1>เครื่องคำนวณความคุ้มค่าโซลาร์รูฟท็อปบ้าน</h1>
-  <p class="sub">ตามเกณฑ์โครงการโซลาร์ภาคประชาชน 2569 (ขายไฟส่วนเกิน 2.20 บาท/หน่วย, ≤ 5 kW, 10 ปี, Net Billing) และสิทธิลดหย่อนภาษีสูงสุด 200,000 บาท</p>
+  <p class="sub">ตามเกณฑ์โครงการโซลาร์ภาคประชาชน 2569 (ขายไฟส่วนเกิน 2.20 บาท/หน่วย, ≤ 5 kW, 10 ปี, Net Billing) เงินอุดหนุน 50,000 บาท หรือสิทธิลดหย่อนภาษีสูงสุด 200,000 บาท และสินเชื่อดอกเบี้ย 2.5% จากธนาคารรัฐ</p>
 
   <div class="grid">
     <form class="card" id="f" onsubmit="return false">
@@ -111,13 +111,25 @@ tr.pb td{background:var(--accent-soft)}
       </fieldset>
 
       <fieldset>
-        <legend>ภาษี</legend>
-        <label class="chk"><input type="checkbox" id="tax" checked> ใช้สิทธิลดหย่อนภาษี (≤ 10 kWp, On-grid)</label>
+        <legend>สิทธิจากรัฐ (เลือกได้ 1 อย่าง)</legend>
+        <label class="chk"><input type="radio" name="aid" value="subsidy" checked> เงินอุดหนุนค่าติดตั้ง (ระบบ 5–10 kW)</label>
+        <label class="f">เงินอุดหนุน (บาท)<input type="number" id="subsidy" value="50000" step="1000" min="0"></label>
+        <label class="chk"><input type="radio" name="aid" value="tax"> ลดหย่อนภาษี สูงสุด 200,000 บาท (≤ 10 kWp)</label>
         <label class="f">อัตราภาษีขั้นสูงสุดของคุณ<select id="taxRate">
           <option value="0">0%</option><option value="5">5%</option><option value="10">10%</option><option value="15">15%</option>
           <option value="20" selected>20%</option><option value="25">25%</option><option value="30">30%</option><option value="35">35%</option>
         </select></label>
+        <label class="chk"><input type="radio" name="aid" value="none"> ไม่ใช้สิทธิ</label>
         <div class="warn" id="taxWarn"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>เงินกู้ธนาคาร</legend>
+        <label class="chk"><input type="checkbox" id="loan" checked> กู้สินเชื่อโซลาร์ (ธ.ก.ส. / ธอส. / ออมสิน)</label>
+        <label class="f">วงเงินกู้ (บาท)<small>ธอส. สูงสุด 90,000 บาท</small><input type="number" id="loanAmt" value="90000" step="1000" min="0"></label>
+        <label class="f">ดอกเบี้ย (%/ปี)<small>โครงการรัฐ 2.5% ลดต้นลดดอก</small><input type="number" id="loanRate" value="2.5" step="0.05" min="0"></label>
+        <label class="f">ระยะผ่อน (ปี)<input type="number" id="loanYears" value="7" min="1" max="30" step="1"></label>
+        <div class="warn" id="loanWarn"></div>
       </fieldset>
 
       <fieldset>
@@ -131,10 +143,12 @@ tr.pb td{background:var(--accent-soft)}
 
     <div class="stack">
       <div class="kpis">
-        <div class="kpi"><div class="l">คืนทุนใน</div><div class="v" id="kPayback">–</div><div class="n">นับจากวันติดตั้ง</div></div>
+        <div class="kpi"><div class="l">คืนทุนใน</div><div class="v" id="kPayback">–</div><div class="n" id="kPaybackN">นับจากวันติดตั้ง</div></div>
         <div class="kpi"><div class="l">ได้ปีแรก (สุทธิ)</div><div class="v" id="kYear1">–</div><div class="n" id="kMonth">–</div></div>
         <div class="kpi"><div class="l" id="kProfitL">กำไรสุทธิ</div><div class="v" id="kProfit">–</div><div class="n">หลังหักเงินลงทุน</div></div>
-        <div class="kpi"><div class="l">ผลตอบแทน (IRR)</div><div class="v" id="kIrr">–</div><div class="n">ต่อปี</div></div>
+        <div class="kpi"><div class="l">ค่างวดธนาคาร</div><div class="v" id="kInstall">–</div><div class="n" id="kInstallN">–</div></div>
+        <div class="kpi"><div class="l">ดอกเบี้ยรวม</div><div class="v bad" id="kInterest">–</div><div class="n">ตลอดสัญญากู้ (นับเป็นค่าใช้จ่าย)</div></div>
+        <div class="kpi"><div class="l">ผลตอบแทน (IRR)</div><div class="v" id="kIrr">–</div><div class="n">ต่อปี เทียบเงินที่จ่ายเอง</div></div>
       </div>
 
       <div class="card">
@@ -217,16 +231,38 @@ tr.pb td{background:var(--accent-soft)}
     </div>
 
     <div class="card" style="margin-top:16px">
-      <h3>เปรียบเทียบ 2 มาตรการ</h3>
+      <h3>เงินอุดหนุน 50,000 บาท และสินเชื่อดอกเบี้ยต่ำจากธนาคารรัฐ</h3>
+      <div class="rgrid">
+        <ul>
+          <li><b>เงินอุดหนุน:</b> รัฐช่วยค่าติดตั้งครัวเรือนละ 50,000 บาท (ให้เปล่า ไม่ต้องคืน) เป้าหมาย 1 ล้านครัวเรือน</li>
+          <li><b>ขนาดระบบ:</b> 5–10 kW ต่อ 1 มิเตอร์</li>
+          <li><b>ผู้มีสิทธิ:</b> ผู้ใช้ไฟประเภทที่ 1 (บ้านอยู่อาศัย) ผ่านการตรวจจาก กฟน./กฟภ. 1 ครัวเรือน 1 ครั้ง</li>
+          <li><b>ใช้ร่วมกับลดหย่อนภาษีไม่ได้:</b> ต้องไม่เคยใช้สิทธิลดหย่อนภาษีโซลาร์ 200,000 บาท</li>
+          <li><b>ผู้ถือบัตรสวัสดิการแห่งรัฐ:</b> เข้าร่วมได้ แต่ต้องสละสิทธิช่วยค่าไฟตามบัตร</li>
+          <li><b>ลงทะเบียน:</b> 27 ต.ค. 2569 – 31 ม.ค. 2571 หรือจนกว่าวงเงินจะหมด (บางแหล่งระบุว่าระบบอาจเปิดจริง 1 พ.ย. 2569)</li>
+        </ul>
+        <ul>
+          <li><b>ธนาคารที่เข้าร่วม:</b> ธ.ก.ส. ธอส. และออมสิน</li>
+          <li><b>ดอกเบี้ย:</b> 2.5% ต่อปี คิดแบบลดต้นลดดอก ผ่อน 7 ปี</li>
+          <li><b>ธอส.:</b> กู้ได้สูงสุด 90,000 บาท (ไม่รวมเงินอุดหนุน) ชื่อผู้กู้ต้องตรงกับเจ้าของมิเตอร์ ภาระหนี้ไม่เกิน 70% ของรายได้</li>
+          <li><b>ธ.ก.ส.:</b> สำหรับเกษตรกรลูกค้า อายุไม่เกิน 85 ปี วงเงินรวมเงินอุดหนุนไม่เกินค่าติดตั้งมาตรฐาน 140,000 บาท ธนาคารหักเงินขายไฟไปชำระหนี้</li>
+          <li><b>ออมสิน:</b> รายละเอียดยังไม่ประกาศทางการ ให้สอบถามที่สาขา</li>
+          <li><b>กำหนดทำสัญญากู้:</b> ภายใน 31 ส.ค. 2570</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>เปรียบเทียบมาตรการ</h3>
       <div class="tablewrap">
         <table class="cmp">
-          <thead><tr><th>หัวข้อ</th><th>ขายไฟคืน (โซลาร์ภาคประชาชน)</th><th>ลดหย่อนภาษี</th></tr></thead>
+          <thead><tr><th>หัวข้อ</th><th>ขายไฟคืน (โซลาร์ภาคประชาชน)</th><th>เงินอุดหนุน + สินเชื่อ</th><th>ลดหย่อนภาษี</th></tr></thead>
           <tbody>
-            <tr><td>ขนาดระบบ</td><td>ไม่เกิน 5 kW ต่อมิเตอร์</td><td>ไม่เกิน 10 kWp ต่อมิเตอร์</td></tr>
-            <tr><td>ได้ประโยชน์</td><td>2.20 บาท/หน่วย สำหรับไฟส่วนเกิน 10 ปี</td><td>หักลดหย่อนได้สูงสุด 200,000 บาท (ครั้งเดียว)</td></tr>
-            <tr><td>ใครได้สิทธิ</td><td>ผู้ใช้ไฟบ้านอยู่อาศัยที่เป็นเจ้าของมิเตอร์</td><td>บุคคลธรรมดาที่ติดตั้งบนบ้านที่อยู่อาศัย</td></tr>
-            <tr><td>ข้อจำกัด</td><td>โควตา 500 MW ยื่นก่อนได้ก่อน</td><td>1 คน 1 ครั้ง ต้องมี e-Tax Invoice</td></tr>
-            <tr><td>ใช้พร้อมกันได้</td><td colspan="2">ได้ ถ้าระบบไม่เกิน 5 kW จะได้ทั้ง 2 สิทธิ ระบบ 5–10 kWp ได้เฉพาะลดหย่อนภาษี</td></tr>
+            <tr><td>ขนาดระบบ</td><td>ไม่เกิน 5 kW ต่อมิเตอร์</td><td>5–10 kW ต่อมิเตอร์</td><td>ไม่เกิน 10 kWp ต่อมิเตอร์</td></tr>
+            <tr><td>ได้ประโยชน์</td><td>2.20 บาท/หน่วย สำหรับไฟส่วนเกิน 10 ปี</td><td>ได้เปล่า 50,000 บาท และกู้ดอกเบี้ย 2.5% นาน 7 ปี</td><td>หักลดหย่อนได้สูงสุด 200,000 บาท (ครั้งเดียว)</td></tr>
+            <tr><td>ใครได้สิทธิ</td><td>ผู้ใช้ไฟบ้านอยู่อาศัยที่เป็นเจ้าของมิเตอร์</td><td>ผู้ใช้ไฟประเภทที่ 1 ครัวเรือนละ 1 ครั้ง</td><td>บุคคลธรรมดาที่ติดตั้งบนบ้านที่อยู่อาศัย</td></tr>
+            <tr><td>ข้อจำกัด</td><td>โควตา 500 MW ยื่นก่อนได้ก่อน</td><td>จนกว่าวงเงินหมด กู้ตามเกณฑ์รายได้ของธนาคาร</td><td>1 คน 1 ครั้ง ต้องมี e-Tax Invoice</td></tr>
+            <tr><td>ใช้ร่วมกัน</td><td colspan="3">เงินอุดหนุนกับลดหย่อนภาษีต้องเลือกอย่างใดอย่างหนึ่ง ทั้งสองแบบเข้าโครงการขายไฟคืนได้ถ้าระบบไม่เกิน 5 kW ระบบ 5 kW พอดีจึงได้ทั้งเงินอุดหนุนและขายไฟ ผู้ที่อยู่ในฐานภาษีต่ำกว่า 25% มักได้ประโยชน์จากเงินอุดหนุน 50,000 บาทมากกว่า</td></tr>
           </tbody>
         </table>
       </div>
@@ -241,6 +277,9 @@ tr.pb td{background:var(--accent-soft)}
         <li><a href="https://www.kaohoon.com/news/842340" target="_blank" rel="noopener">ข่าวหุ้น – กกพ. เปิดรับ 1 ก.ค. 2569</a></li>
         <li><a href="https://policywatch.thaipbs.or.th/article/economy-178" target="_blank" rel="noopener">Thai PBS Policy Watch – ลดหย่อนภาษี 200,000 บาท</a></li>
         <li><a href="https://www.finnomena.com/?p=277083" target="_blank" rel="noopener">Finnomena – ติดโซลาร์ ลดหย่อนภาษี</a></li>
+        <li><a href="https://www.thansettakij.com/general-news/672354" target="_blank" rel="noopener">ฐานเศรษฐกิจ – สินเชื่อ ธ.ก.ส.-ธอส.-ออมสิน โซลาร์ภาคประชาชน 50,000 บาท</a></li>
+        <li><a href="https://www.massteclink.com/knowledge/solar-rooftop-50000-baht/" target="_blank" rel="noopener">Massteclink – โซลาร์รูฟท็อป 50,000 บาท เงื่อนไขล่าสุด</a></li>
+        <li><a href="https://www.ghbank.co.th/news/detail/public-relations/press-02-07-2026" target="_blank" rel="noopener">ธอส. – สินเชื่อ Solar Rooftop</a></li>
       </ul>
     </div>
   </section>
@@ -273,14 +312,31 @@ function calc(){
     ? 'ระบบใหญ่กว่า 5 kW ขายไฟในโครงการไม่ได้ จึงคิดไฟส่วนเกินเป็น 0 (ต้องตั้งค่าไม่ให้ไหลย้อน)'
     : !$('sell').checked ? 'ไม่ได้ขายไฟ: ไฟส่วนเกินคิดเป็น 0 บาท' : '';
 
+  const aid = document.querySelector('input[name=aid]:checked').value;
   const taxEligible = size <= 10;
   const deductible = Math.min(num('cost'), 200000);
-  const taxSave = $('tax').checked && taxEligible ? deductible * num('taxRate') / 100 : 0;
-  $('taxWarn').textContent = $('tax').checked && !taxEligible ? 'ระบบเกิน 10 kWp ไม่เข้าเงื่อนไขลดหย่อนภาษี' : '';
+  const taxSave = aid === 'tax' && taxEligible ? deductible * num('taxRate') / 100 : 0;
+  const subEligible = size >= 5 && size <= 10;
+  const subsidy = aid === 'subsidy' && subEligible ? Math.min(num('subsidy'), gross) : 0;
+  $('taxWarn').textContent =
+    aid === 'tax' && !taxEligible ? 'ระบบเกิน 10 kWp ไม่เข้าเงื่อนไขลดหย่อนภาษี'
+    : aid === 'subsidy' && !subEligible ? 'เงินอุดหนุนสำหรับระบบ 5–10 kW เท่านั้น จึงคิดเป็น 0'
+    : aid === 'subsidy' ? 'ผู้รับเงินอุดหนุนต้องไม่เคยใช้สิทธิลดหย่อนภาษีโซลาร์ (ใช้ร่วมกันไม่ได้)' : '';
 
-  const net0 = gross - taxSave;
+  const useLoan = $('loan').checked;
+  const loanMax = Math.max(gross - subsidy, 0);
+  const principal = useLoan ? Math.min(num('loanAmt'), loanMax) : 0;
+  $('loanWarn').textContent = useLoan && num('loanAmt') > loanMax
+    ? `กู้ได้ไม่เกินค่าติดตั้งที่เหลือหลังหักเงินอุดหนุน (${baht(loanMax)} บาท)` : '';
+  const loanYears = Math.max(Math.round(num('loanYears')), 1);
+  const nPay = loanYears * 12, mRate = num('loanRate') / 100 / 12;
+  const monthly = principal ? (mRate ? principal * mRate / (1 - Math.pow(1 + mRate, -nPay)) : principal / nPay) : 0;
+  const totalInterest = monthly * nPay - principal;
+
+  // เงินที่จ่ายเองวันติดตั้ง = ค่าติดตั้ง − เงินอุดหนุน − ภาษีที่ได้คืน − เงินกู้
+  const net0 = gross - subsidy - taxSave - principal;
   const rows = [];
-  let cum = -net0, payback = null;
+  let cum = -net0, payback = net0 > 0 ? null : 0;
   const flows = [-net0];
 
   for (let t = 1; t <= years; t++){
@@ -290,44 +346,67 @@ function calc(){
     const expRate = selling ? (t <= num('contract') ? num('buy') : num('post')) : 0;
     const save = self * elec, sell = exp * expRate;
     const cost = num('om') + (t === Math.round(num('invYear')) ? num('inv') : 0);
-    const cash = save + sell - cost;
+    const loanPay = t <= loanYears ? monthly * 12 : 0;
+    const cash = save + sell - cost - loanPay;
     const prev = cum;
     cum += cash;
-    if (payback === null && prev < 0 && cum >= 0) payback = t - 1 + (-prev / cash);
-    rows.push({t, prod, self, exp, save, sell, cost, cash, cum});
+    // นับจุดคืนทุนครั้งสุดท้ายที่เงินสะสมกลับมาเป็นบวก (ช่วงผ่อนอาจติดลบก่อน)
+    if (cum < 0) payback = null;
+    else if (prev < 0) payback = t - 1 + (-prev / cash);
+    rows.push({t, prod, self, exp, save, sell, cost, loanPay, cash, cum});
     flows.push(cash);
   }
-  if (payback === null && net0 <= 0) payback = 0;
 
-  render({gross, taxSave, net0, rows, payback, years, flows});
+  // คืนทุนเทียบต้นทุนรวม (ค่าติดตั้งสุทธิ + ดอกเบี้ยทั้งหมด) ไม่ขึ้นกับจังหวะการผ่อน
+  let fullCum = -(gross - subsidy - taxSave + totalInterest), fullPayback = fullCum >= 0 ? 0 : null;
+  for (const r of rows){
+    const gain = r.save + r.sell - r.cost, prev = fullCum;
+    fullCum += gain;
+    if (fullPayback === null && prev < 0 && fullCum >= 0) fullPayback = r.t - 1 + (-prev / gain);
+  }
+
+  render({gross, subsidy, taxSave, principal, monthly, totalInterest, loanYears, net0, rows, payback, fullPayback, years, flows});
 }
 
-function render({gross, taxSave, net0, rows, payback, years, flows}){
+function render({gross, subsidy, taxSave, principal, monthly, totalInterest, loanYears, net0, rows, payback, fullPayback, years, flows}){
   const y1 = rows[0];
-  $('kPayback').textContent = payback === null ? `เกิน ${years} ปี` : `${payback.toFixed(1)} ปี`;
-  $('kPayback').className = 'v ' + (payback === null ? 'bad' : payback <= 7 ? 'good' : '');
+  const shown = principal ? fullPayback : payback;
+  $('kPayback').textContent = shown === null ? `เกิน ${years} ปี` : `${shown.toFixed(1)} ปี`;
+  $('kPayback').className = 'v ' + (shown === null ? 'bad' : shown <= 7 ? 'good' : '');
+  $('kPaybackN').textContent = principal
+    ? `เทียบต้นทุนรวมดอกเบี้ย · เงินที่จ่ายเองคืนใน ${payback === null ? `เกิน ${years}` : payback.toFixed(1)} ปี`
+    : 'นับจากวันติดตั้ง';
   $('kYear1').textContent = baht(y1.cash) + ' ฿';
   $('kMonth').textContent = `เฉลี่ย ${baht(y1.cash / 12)} บาท/เดือน`;
   const profit = rows[rows.length - 1].cum;
   $('kProfitL').textContent = `กำไรสุทธิ ${years} ปี`;
   $('kProfit').textContent = baht(profit) + ' ฿';
   $('kProfit').className = 'v ' + (profit >= 0 ? 'good' : 'bad');
-  const r = irr(flows);
+  const r = net0 > 0 ? irr(flows) : null;
   $('kIrr').textContent = r === null ? '–' : (r * 100).toFixed(1) + '%';
+  $('kInstall').textContent = principal ? baht(monthly) + ' ฿' : 'ไม่กู้';
+  $('kInstallN').textContent = principal ? `ต่อเดือน นาน ${loanYears} ปี (กู้ ${baht(principal)} บาท)` : 'ไม่มีค่างวด';
+  $('kInterest').textContent = baht(totalInterest) + ' ฿';
 
+  const loanRows = principal ? `
+    <span>ผ่อนธนาคาร ${baht(monthly)} × 12 เดือน</span><span class="bad">−${baht(y1.loanPay)} บาท</span>` : '';
   $('breakdown').innerHTML = `
     <span>ค่าติดตั้ง + ค่าธรรมเนียม</span><span>${baht(gross)} บาท</span>
+    <span>เงินอุดหนุนจากรัฐ</span><span class="good">−${baht(subsidy)} บาท</span>
     <span>คืนภาษีจากการลดหย่อน</span><span class="good">−${baht(taxSave)} บาท</span>
-    <span class="t">เงินลงทุนสุทธิ</span><span class="t">${baht(net0)} บาท</span>
+    <span>เงินกู้ธนาคาร</span><span>−${baht(principal)} บาท</span>
+    <span class="t">เงินที่จ่ายเองวันติดตั้ง</span><span class="t">${baht(net0)} บาท</span>
+    <span>ดอกเบี้ยรวมตลอดสัญญากู้</span><span class="bad">${baht(totalInterest)} บาท</span>
+    <span class="t">ต้นทุนรวมทั้งหมด (จ่ายเอง + เงินต้น + ดอกเบี้ย)</span><span class="t">${baht(net0 + principal + totalInterest)} บาท</span>
     <span>ผลิตไฟปีแรก</span><span>${baht(y1.prod)} หน่วย</span>
     <span>ใช้เอง ${baht(y1.self)} หน่วย → ประหยัดค่าไฟ</span><span class="good">${baht(y1.save)} บาท</span>
     <span>ส่งออก ${baht(y1.exp)} หน่วย → ขายไฟ</span><span class="good">${baht(y1.sell)} บาท</span>
-    <span>ค่าดูแลรักษา</span><span class="bad">−${baht(y1.cost)} บาท</span>
-    <span class="t">รายรับสุทธิปีแรก</span><span class="t">${baht(y1.cash)} บาท</span>`;
+    <span>ค่าดูแลรักษา</span><span class="bad">−${baht(y1.cost)} บาท</span>${loanRows}
+    <span class="t">เงินเหลือสุทธิปีแรก</span><span class="t ${y1.cash >= 0 ? 'good' : 'bad'}">${baht(y1.cash)} บาท</span>`;
 
   const pbYear = payback === null ? -1 : Math.ceil(payback);
-  $('tbl').innerHTML = `<thead><tr><th>ปี</th><th>ผลิต (หน่วย)</th><th>ประหยัดค่าไฟ</th><th>ขายไฟ</th><th>ค่าดูแล</th><th>สุทธิ</th><th>สะสม</th></tr></thead><tbody>` +
-    rows.map(r => `<tr class="${r.t === pbYear ? 'pb' : ''}"><td>${r.t}</td><td>${baht(r.prod)}</td><td>${baht(r.save)}</td><td>${baht(r.sell)}</td><td>${r.cost ? '−' + baht(r.cost) : '0'}</td><td>${baht(r.cash)}</td><td class="${r.cum >= 0 ? 'good' : 'bad'}">${baht(r.cum)}</td></tr>`).join('') + '</tbody>';
+  $('tbl').innerHTML = `<thead><tr><th>ปี</th><th>ผลิต (หน่วย)</th><th>ประหยัดค่าไฟ</th><th>ขายไฟ</th><th>ค่าดูแล</th><th>ผ่อนธนาคาร</th><th>สุทธิ</th><th>สะสม</th></tr></thead><tbody>` +
+    rows.map(r => `<tr class="${r.t === pbYear ? 'pb' : ''}"><td>${r.t}</td><td>${baht(r.prod)}</td><td>${baht(r.save)}</td><td>${baht(r.sell)}</td><td>${r.cost ? '−' + baht(r.cost) : '0'}</td><td>${r.loanPay ? '−' + baht(r.loanPay) : '0'}</td><td>${baht(r.cash)}</td><td class="${r.cum >= 0 ? 'good' : 'bad'}">${baht(r.cum)}</td></tr>`).join('') + '</tbody>';
 
   drawChart([-net0, ...rows.map(r => r.cum)]);
 }
