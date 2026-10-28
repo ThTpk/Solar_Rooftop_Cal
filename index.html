@@ -42,7 +42,9 @@ input[type=number],select{width:100%;padding:6px 8px;border:1px solid var(--line
 label.chk{display:flex;gap:8px;align-items:center;margin:8px 0;font-size:.95rem}
 .warn{background:var(--accent-soft);border-radius:8px;padding:8px 10px;font-size:.88rem;margin:6px 0}
 .warn:empty{display:none}
-.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+@media (max-width:1100px) and (min-width:621px){.kpis{grid-template-columns:repeat(2,1fr)}}
+label.f.hide{display:none}
 @media (max-width:620px){.kpis{grid-template-columns:repeat(2,1fr)}}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
 .kpi .l{color:var(--muted);font-size:.85rem}
@@ -97,8 +99,16 @@ tr.pb td{background:var(--accent-soft)}
       <fieldset>
         <legend>การใช้ไฟของบ้าน</legend>
         <label class="f">สัดส่วนใช้เองกลางวัน (%)<small>บ้านมีคนอยู่กลางวัน 60–80%, ไม่อยู่ 20–40%</small><input type="number" id="sc" value="70" min="0" max="100" step="5"></label>
-        <label class="f">ค่าไฟเฉลี่ย (บาท/หน่วย)<small>รวม Ft + VAT ดูจากบิล</small><input type="number" id="rate" value="4.5" step="0.05" min="0"></label>
+        <label class="f">วิธีคิดค่าไฟ<select id="tariff">
+          <option value="tier" selected>ขั้นบันได (บ้านอยู่อาศัย)</option>
+          <option value="tou">TOU (ประเภท 1.3)</option>
+          <option value="avg">ค่าเฉลี่ยคงที่ (กรอกเอง)</option>
+        </select></label>
+        <label class="f" data-mode="tier">ใช้ไฟต่อเดือน (หน่วย)<small>ก่อนติดโซลาร์ ดูจากบิล</small><input type="number" id="units" value="600" step="10" min="0"></label>
+        <label class="f" data-mode="tier tou">ค่า Ft (บาท/หน่วย)<small>ก.ย.–ธ.ค. 2569 = 0.1623</small><input type="number" id="ft" value="0.1623" step="0.01"></label>
+        <label class="f" data-mode="avg">ค่าไฟเฉลี่ย (บาท/หน่วย)<small>รวม Ft + VAT ดูจากบิล</small><input type="number" id="rate" value="4.5" step="0.05" min="0"></label>
         <label class="f">ค่าไฟขึ้นเฉลี่ย (%/ปี)<input type="number" id="esc" value="1" step="0.5"></label>
+        <div class="warn" id="tariffInfo"></div>
       </fieldset>
 
       <fieldset>
@@ -129,6 +139,7 @@ tr.pb td{background:var(--accent-soft)}
         <label class="f">วงเงินกู้ (บาท)<small>ธอส. สูงสุด 90,000 บาท</small><input type="number" id="loanAmt" value="90000" step="1000" min="0"></label>
         <label class="f">ดอกเบี้ย (%/ปี)<small>โครงการรัฐ 2.5% ลดต้นลดดอก</small><input type="number" id="loanRate" value="2.5" step="0.05" min="0"></label>
         <label class="f">ระยะผ่อน (ปี)<input type="number" id="loanYears" value="7" min="1" max="30" step="1"></label>
+        <label class="f">ประกันสินเชื่อ (บาท)<small>จ่ายครั้งเดียว ถ้าธนาคารกำหนด</small><input type="number" id="loanIns" value="3000" step="500" min="0"></label>
         <div class="warn" id="loanWarn"></div>
       </fieldset>
 
@@ -137,7 +148,14 @@ tr.pb td{background:var(--accent-soft)}
         <label class="f">ล้างแผง/บำรุงรักษา (บาท/ปี)<input type="number" id="om" value="2000" step="500" min="0"></label>
         <label class="f">ค่าเปลี่ยนอินเวอร์เตอร์ (บาท)<input type="number" id="inv" value="30000" step="1000" min="0"></label>
         <label class="f">เปลี่ยนในปีที่<input type="number" id="invYear" value="12" min="0" step="1"></label>
+        <label class="f">ค่าถอด-ติดแผงคืน (บาท)<small>ตอนซ่อม/เปลี่ยนหลังคา</small><input type="number" id="roof" value="15000" step="1000" min="0"></label>
+        <label class="f">ซ่อมหลังคาในปีที่<small>0 = ไม่มี</small><input type="number" id="roofYear" value="15" min="0" step="1"></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>การวิเคราะห์</legend>
         <label class="f">ระยะวิเคราะห์ (ปี)<input type="number" id="years" value="25" min="5" max="40" step="1"></label>
+        <label class="f">อัตราคิดลด (%/ปี)<small>ผลตอบแทนที่ได้ถ้าเอาเงินไปฝาก/ลงทุนอื่น</small><input type="number" id="disc" value="3" step="0.5" min="0"></label>
       </fieldset>
     </form>
 
@@ -149,6 +167,8 @@ tr.pb td{background:var(--accent-soft)}
         <div class="kpi"><div class="l">ค่างวดธนาคาร</div><div class="v" id="kInstall">–</div><div class="n" id="kInstallN">–</div></div>
         <div class="kpi"><div class="l">ดอกเบี้ยรวม</div><div class="v bad" id="kInterest">–</div><div class="n">ตลอดสัญญากู้ (นับเป็นค่าใช้จ่าย)</div></div>
         <div class="kpi"><div class="l">ผลตอบแทน (IRR)</div><div class="v" id="kIrr">–</div><div class="n">ต่อปี เทียบเงินที่จ่ายเอง</div></div>
+        <div class="kpi"><div class="l">มูลค่าปัจจุบันสุทธิ (NPV)</div><div class="v" id="kNpv">–</div><div class="n" id="kNpvN">–</div></div>
+        <div class="kpi"><div class="l">มูลค่าไฟที่ใช้เอง</div><div class="v" id="kUnit">–</div><div class="n" id="kUnitN">ต่อหน่วย ปีแรก</div></div>
       </div>
 
       <div class="card">
@@ -292,7 +312,7 @@ const baht = v => Math.round(v).toLocaleString('th-TH');
 
 function irr(flows){
   const npv = r => flows.reduce((s, c, t) => s + c / Math.pow(1 + r, t), 0);
-  let lo = -0.99, hi = 1;
+  let lo = -0.99, hi = 10;
   if (npv(lo) * npv(hi) > 0) return null;
   for (let i = 0; i < 200; i++){
     const mid = (lo + hi) / 2;
@@ -301,10 +321,48 @@ function irr(flows){
   return (lo + hi) / 2;
 }
 
+// อัตราค่าพลังงานไฟบ้าน [จำนวนหน่วยในขั้น, บาท/หน่วย] ประเภท 1.1 (≤ 150 หน่วย/เดือน) และ 1.2 (> 150)
+const TIER_11 = [[15, 2.3488], [10, 2.9882], [10, 3.2405], [65, 3.6237], [50, 3.7171], [250, 4.2218], [Infinity, 4.4217]];
+const TIER_12 = [[150, 3.2484], [250, 4.2218], [Infinity, 4.4217]];
+const TOU_ON = 5.7982, TOU_OFF = 2.6369;
+const VAT = 1.07;
+
+// ค่าไฟรายเดือน (ค่าพลังงาน + Ft + VAT ไม่รวมค่าบริการ ซึ่งไม่เปลี่ยนตามโซลาร์)
+function energyBill(u, tiers, ft){
+  let e = 0, rem = u;
+  for (const [w, p] of tiers){
+    const x = Math.min(rem, w);
+    e += x * p; rem -= x;
+    if (rem <= 0) break;
+  }
+  return (e + u * ft) * VAT;
+}
+
 function calc(){
   const size = num('size'), years = Math.round(num('years'));
   const sc = Math.min(Math.max(num('sc'), 0), 100) / 100;
   const gross = num('cost') + num('fee');
+
+  const mode = $('tariff').value, ft = num('ft'), units = num('units');
+  document.querySelectorAll('[data-mode]').forEach(el => el.classList.toggle('hide', !el.dataset.mode.split(' ').includes(mode)));
+  const tiers = units > 150 ? TIER_12 : TIER_11;
+  const touRate = ((5 * TOU_ON + 2 * TOU_OFF) / 7 + ft) * VAT;
+  // มูลค่าค่าไฟที่ประหยัดได้จากไฟที่ใช้เอง: แบบขั้นบันไดจะไปลดหน่วยแพงสุดก่อน
+  const selfValue = (self, t) => {
+    const esc = Math.pow(1 + num('esc') / 100, t - 1);
+    if (mode === 'avg') return self * num('rate') * esc;
+    if (mode === 'tou') return self * touRate * esc;
+    const m = Math.min(self / 12, units);
+    return 12 * (energyBill(units, tiers, ft) - energyBill(units - m, tiers, ft)) * esc;
+  };
+  const self1 = size * num('yield') * 365 * sc;
+  $('tariffInfo').textContent =
+    mode === 'tier'
+      ? `ประเภท ${units > 150 ? '1.2' : '1.1'}: ค่าไฟก่อนติดโซลาร์ประมาณ ${baht(energyBill(units, tiers, ft))} บาท/เดือน (ไม่รวมค่าบริการ)` +
+        (self1 / 12 > units ? ' · ไฟที่ใช้เองมากกว่าไฟที่ใช้ทั้งเดือน ส่วนเกินไม่นับเป็นเงินประหยัด' : '')
+    : mode === 'tou'
+      ? `On-Peak ${TOU_ON} บาท (จ.–ศ. 09:00–22:00) Off-Peak ${TOU_OFF} บาท · คิดว่าไฟโซลาร์ 5 ใน 7 วันอยู่ช่วง On-Peak = ${touRate.toFixed(2)} บาท/หน่วย รวม Ft + VAT (ยังไม่รวมผลที่บิลส่วนอื่นเปลี่ยนเมื่อย้ายเป็นมิเตอร์ TOU)`
+    : '';
 
   const sellEligible = size <= 5;
   const selling = $('sell').checked && sellEligible;
@@ -332,9 +390,11 @@ function calc(){
   const nPay = loanYears * 12, mRate = num('loanRate') / 100 / 12;
   const monthly = principal ? (mRate ? principal * mRate / (1 - Math.pow(1 + mRate, -nPay)) : principal / nPay) : 0;
   const totalInterest = monthly * nPay - principal;
+  // ประกันสินเชื่อ + อากรแสตมป์สัญญากู้ 0.05%
+  const loanFees = principal ? num('loanIns') + principal * 0.0005 : 0;
 
-  // เงินที่จ่ายเองวันติดตั้ง = ค่าติดตั้ง − เงินอุดหนุน − ภาษีที่ได้คืน − เงินกู้
-  const net0 = gross - subsidy - taxSave - principal;
+  // เงินที่จ่ายเองวันติดตั้ง = ค่าติดตั้ง − เงินอุดหนุน − ภาษีที่ได้คืน − เงินกู้ + ค่าธรรมเนียมเงินกู้
+  const net0 = gross - subsidy - taxSave - principal + loanFees;
   const rows = [];
   let cum = -net0, payback = net0 > 0 ? null : 0;
   const flows = [-net0];
@@ -342,10 +402,11 @@ function calc(){
   for (let t = 1; t <= years; t++){
     const prod = size * num('yield') * 365 * Math.pow(1 - num('deg') / 100, t - 1);
     const self = prod * sc, exp = prod - self;
-    const elec = num('rate') * Math.pow(1 + num('esc') / 100, t - 1);
     const expRate = selling ? (t <= num('contract') ? num('buy') : num('post')) : 0;
-    const save = self * elec, sell = exp * expRate;
-    const cost = num('om') + (t === Math.round(num('invYear')) ? num('inv') : 0);
+    const save = selfValue(self, t), sell = exp * expRate;
+    const cost = num('om')
+      + (t === Math.round(num('invYear')) ? num('inv') : 0)
+      + (t === Math.round(num('roofYear')) ? num('roof') : 0);
     const loanPay = t <= loanYears ? monthly * 12 : 0;
     const cash = save + sell - cost - loanPay;
     const prev = cum;
@@ -358,18 +419,26 @@ function calc(){
   }
 
   // คืนทุนเทียบต้นทุนรวม (ค่าติดตั้งสุทธิ + ดอกเบี้ยทั้งหมด) ไม่ขึ้นกับจังหวะการผ่อน
-  let fullCum = -(gross - subsidy - taxSave + totalInterest), fullPayback = fullCum >= 0 ? 0 : null;
+  let fullCum = -(gross - subsidy - taxSave + totalInterest + loanFees), fullPayback = fullCum >= 0 ? 0 : null;
   for (const r of rows){
     const gain = r.save + r.sell - r.cost, prev = fullCum;
     fullCum += gain;
     if (fullPayback === null && prev < 0 && fullCum >= 0) fullPayback = r.t - 1 + (-prev / gain);
   }
 
-  render({gross, subsidy, taxSave, principal, monthly, totalInterest, loanYears, net0, rows, payback, fullPayback, years, flows});
+  const avgBill = mode === 'tier' && units ? energyBill(units, tiers, ft) / units : null;
+  render({gross, subsidy, taxSave, principal, monthly, totalInterest, loanFees, loanYears, net0, rows, payback, fullPayback, years, flows, avgBill});
 }
 
-function render({gross, subsidy, taxSave, principal, monthly, totalInterest, loanYears, net0, rows, payback, fullPayback, years, flows}){
+function render({gross, subsidy, taxSave, principal, monthly, totalInterest, loanFees, loanYears, net0, rows, payback, fullPayback, years, flows, avgBill}){
   const y1 = rows[0];
+  const d = num('disc') / 100;
+  const npv = flows.reduce((s, c, t) => s + c / Math.pow(1 + d, t), 0);
+  $('kNpv').textContent = baht(npv) + ' ฿';
+  $('kNpv').className = 'v ' + (npv >= 0 ? 'good' : 'bad');
+  $('kNpvN').textContent = `${npv >= 0 ? 'คุ้มกว่า' : 'ด้อยกว่า'}เอาเงินไปลงทุนที่ ${num('disc')}% ต่อปี`;
+  $('kUnit').textContent = y1.self ? (y1.save / y1.self).toFixed(2) + ' ฿' : '–';
+  $('kUnitN').textContent = avgBill ? `ต่อหน่วย ปีแรก (ค่าไฟเฉลี่ยในบิล ${avgBill.toFixed(2)} บาท)` : 'ต่อหน่วย ปีแรก';
   const shown = principal ? fullPayback : payback;
   $('kPayback').textContent = shown === null ? `เกิน ${years} ปี` : `${shown.toFixed(1)} ปี`;
   $('kPayback').className = 'v ' + (shown === null ? 'bad' : shown <= 7 ? 'good' : '');
@@ -395,6 +464,7 @@ function render({gross, subsidy, taxSave, principal, monthly, totalInterest, loa
     <span>เงินอุดหนุนจากรัฐ</span><span class="good">−${baht(subsidy)} บาท</span>
     <span>คืนภาษีจากการลดหย่อน</span><span class="good">−${baht(taxSave)} บาท</span>
     <span>เงินกู้ธนาคาร</span><span>−${baht(principal)} บาท</span>
+    <span>ประกันสินเชื่อ + อากรแสตมป์</span><span class="bad">${baht(loanFees)} บาท</span>
     <span class="t">เงินที่จ่ายเองวันติดตั้ง</span><span class="t">${baht(net0)} บาท</span>
     <span>ดอกเบี้ยรวมตลอดสัญญากู้</span><span class="bad">${baht(totalInterest)} บาท</span>
     <span class="t">ต้นทุนรวมทั้งหมด (จ่ายเอง + เงินต้น + ดอกเบี้ย)</span><span class="t">${baht(net0 + principal + totalInterest)} บาท</span>
